@@ -1,0 +1,48 @@
+{
+  "default_lang": "es",
+  "profiles": {
+    "Todos": [
+      "\"Juan Román Riquelme\" OR Riquelme",
+      "Reale",
+      "Beraldi",
+      "Ameal",
+      "Rosica",
+      "Mendiguren",
+      "Ibarra",
+      "London",
+      "\"Boca Juniors\" OR #Boca OR #BocaJuniors",
+      "Consejo de Fútbol OR \"Consejo de Futbol\""
+    ],
+    "Riquelme": [
+      "\"Juan Román Riquelme\" OR Riquelme"
+    ],
+    "Reale": [
+      "Reale"
+    ],
+    "Beraldi": [
+      "Beraldi"
+    ],
+    "Ameal": [
+      "Ameal"
+    ],
+    "Rosica": [
+      "Rosica"
+    ],
+    "Mendiguren": [
+      "Mendiguren"
+    ],
+    "Ibarra": [
+      "Ibarra"
+    ],
+    "London": [
+      "London"
+    ],
+    "Temas": [
+      "\"Consejo de Fútbol\" OR \"Consejo de Futbol\"",
+      "\"La Bombonera\"",
+      "#EleccionesBoca OR \"elecciones Boca\""
+    ]
+  },
+  "max_results_per_query": 400,
+  "days_back_default": 2
+}
