@@ -58,6 +58,10 @@ def build_since(days):
     return (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
 
 def glue_queries(terms, lang, days):
+        st.write("🔎 Query(s):")
+    for q in queries:
+        st.code(q, language="bash")
+
     since = build_since(days)
     base = f"lang:{lang} since:{since}"
     return [f"{t} {base}" for t in terms]
