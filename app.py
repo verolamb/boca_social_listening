@@ -3,6 +3,7 @@ import pandas as pd
 import os, sys, subprocess, re, time, json
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
+import feedparser, urllib.parse  # para fallback RSS
 
 st.set_page_config(page_title="Boca Juniors — Social Listening (X)", layout="wide")
 st.title("🟦🟨 Boca Juniors — Social Listening en X (automático)")
@@ -53,6 +54,35 @@ def run_query(search_query: str, limit: int) -> pd.DataFrame:
     df = pd.DataFrame(tweets)
     return df.head(limit) if not df.empty else df
 
+# ---------- Fallback vía Nitter RSS ----------
+def run_query_nitter(search_query: str, limit: int) -> pd.DataFrame:
+    url = "https://nitter.net/search/rss?f=tweets&q=" + urllib.parse.quote(search_query)
+    feed = feedparser.parse(url)
+    rows = []
+    for e in feed.entries[:max(1, limit)]:
+        link = e.link
+        try:
+            username = link.split("/")[3]
+            tid = link.split("/status/")[1]
+        except Exception:
+            username, tid = None, None
+        when = pd.to_datetime(getattr(e, "published", None) or getattr(e, "updated", None), errors="coerce")
+        content = (getattr(e, "title", "") or "") + " " + (getattr(e, "summary", "") or "")
+        rows.append({
+            "id": tid,
+            "date": when,
+            "username": username,
+            "displayname": None,
+            "verified": None,
+            "content": content.strip(),
+            "url": link.replace("nitter.net/", "x.com/"),
+            "replyCount": None,
+            "retweetCount": None,
+            "likeCount": None,
+            "quoteCount": None,
+        })
+    return pd.DataFrame(rows)
+
 def build_since(days):
     return (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
 
@@ -88,9 +118,12 @@ if run_btn:
     with st.spinner("Buscando publicaciones..."):
         for q in queries:
             dfq = run_query(q, limit_per_query)
+            if dfq.empty:
+                dfq = run_query_nitter(q, limit_per_query)
             if not dfq.empty:
                 dfq["query"] = q
                 all_df.append(dfq)
+
     if all_df:
         df_new = pd.concat(all_df, ignore_index=True).drop_duplicates(subset="id")
         if os.path.exists(data_path):
@@ -106,6 +139,8 @@ if run_btn:
         fallback_q = f'("Boca Juniors" OR #Boca OR Boca) lang:{lang} since:{build_since(days_back)}'
         st.code(fallback_q, language="bash")
         dfq = run_query(fallback_q, limit_per_query)
+        if dfq.empty:
+            dfq = run_query_nitter(fallback_q, limit_per_query)
         if not dfq.empty:
             if os.path.exists(data_path):
                 df_old = pd.read_csv(data_path, parse_dates=["date"])
