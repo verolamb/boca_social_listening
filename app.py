@@ -3,7 +3,6 @@ import pandas as pd
 import os, sys, subprocess, re, time, json
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
-from collections import Counter
 
 st.set_page_config(page_title="Boca Juniors — Social Listening (X)", layout="wide")
 st.title("🟦🟨 Boca Juniors — Social Listening en X (automático)")
@@ -58,10 +57,6 @@ def build_since(days):
     return (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
 
 def glue_queries(terms, lang, days):
-        st.write("🔎 Query(s):")
-    for q in queries:
-        st.code(q, language="bash")
-
     since = build_since(days)
     base = f"lang:{lang} since:{since}"
     return [f"{t} {base}" for t in terms]
@@ -84,6 +79,11 @@ if run_btn:
     terms = CFG["profiles"][profile]
     queries = glue_queries(terms, lang, days_back)
 
+    # Mostrar queries en pantalla
+    st.write("🔎 Query(s):")
+    for q in queries:
+        st.code(q, language="bash")
+
     all_df = []
     with st.spinner("Buscando publicaciones..."):
         for q in queries:
@@ -102,7 +102,7 @@ if run_btn:
         df_all.to_csv(data_path, index=False, encoding="utf-8")
         st.success(f"Nuevos: {len(df_new)} | Total histórico: {len(df_all)}")
     else:
-             st.warning("No se encontraron publicaciones nuevas con esa búsqueda. Probando consulta de respaldo…")
+        st.warning("No se encontraron publicaciones nuevas con esa búsqueda. Probando consulta de respaldo…")
         fallback_q = f'("Boca Juniors" OR #Boca OR Boca) lang:{lang} since:{build_since(days_back)}'
         st.code(fallback_q, language="bash")
         dfq = run_query(fallback_q, limit_per_query)
@@ -117,8 +117,7 @@ if run_btn:
             df_all.to_csv(data_path, index=False, encoding="utf-8")
             st.success(f"Respaldo OK. Agregados {len(dfq)} items. Total histórico: {len(df_all)}")
         else:
-            st.error("Ni siquiera la consulta de respaldo devolvió resultados. Puede ser rate‑limit temporal. Probá en 5–10 minutos, o bajá a 3 días / 150 resultados.")
-
+            st.error("Ni siquiera la consulta de respaldo devolvió resultados. Puede ser rate-limit temporal. Probá en 5–10 minutos, o bajá a 3 días / 150 resultados.")
 
 # ---------- Panel ----------
 if os.path.exists(data_path):
@@ -194,4 +193,3 @@ else:
 
 st.markdown("---")
 st.caption("Configurable en config.json (perfiles, términos, idioma y límites). Si aparece rate-limit, bajá días/resultados y ejecutá por perfil.")
-
