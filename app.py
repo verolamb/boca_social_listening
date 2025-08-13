@@ -102,7 +102,23 @@ if run_btn:
         df_all.to_csv(data_path, index=False, encoding="utf-8")
         st.success(f"Nuevos: {len(df_new)} | Total histórico: {len(df_all)}")
     else:
-        st.info("No se encontraron publicaciones nuevas (probá con menos días o menos resultados).")
+             st.warning("No se encontraron publicaciones nuevas con esa búsqueda. Probando consulta de respaldo…")
+        fallback_q = f'("Boca Juniors" OR #Boca OR Boca) lang:{lang} since:{build_since(days_back)}'
+        st.code(fallback_q, language="bash")
+        dfq = run_query(fallback_q, limit_per_query)
+        if not dfq.empty:
+            if os.path.exists(data_path):
+                df_old = pd.read_csv(data_path, parse_dates=["date"])
+            else:
+                df_old = pd.DataFrame()
+            dfq["query"] = fallback_q
+            df_all = pd.concat([df_old, dfq], ignore_index=True).drop_duplicates(subset="id")
+            df_all.sort_values("date", ascending=False, inplace=True)
+            df_all.to_csv(data_path, index=False, encoding="utf-8")
+            st.success(f"Respaldo OK. Agregados {len(dfq)} items. Total histórico: {len(df_all)}")
+        else:
+            st.error("Ni siquiera la consulta de respaldo devolvió resultados. Puede ser rate‑limit temporal. Probá en 5–10 minutos, o bajá a 3 días / 150 resultados.")
+
 
 # ---------- Panel ----------
 if os.path.exists(data_path):
