@@ -2,3 +2,4 @@ streamlit==1.36.0
 pandas==2.2.2
 matplotlib==3.8.4
 snscrape==0.7.0.20230622
+feedparser==6.0.11
